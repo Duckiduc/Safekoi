@@ -2,7 +2,13 @@
 import { m } from '#lib/paraglide/messages.js';
 import { getLocale, setLocale, locales } from '#lib/paraglide/runtime.js';
 import { EXERCISES_FR, PROGRAMS_FR, TEMPLATES_FR } from '#lib/catalog-fr.ts';
-import { toDisplay, type PrKind, type Suggestion, type Units } from '#lib/fitness.ts';
+import {
+	toDisplay,
+	type PrKind,
+	type RestReason,
+	type Suggestion,
+	type Units
+} from '#lib/fitness.ts';
 
 export { m, getLocale, setLocale, locales };
 export type Locale = ReturnType<typeof getLocale>;
@@ -76,6 +82,21 @@ export function suggestionText(s: Suggestion, repMin: number) {
 		default:
 			return s.weight == null ? m.suggest_bodyweight() : m.suggest_more_reps();
 	}
+}
+
+const REST_REASON: Record<RestReason, () => string> = {
+	hard: m.rest_reason_hard,
+	missed: m.rest_reason_missed,
+	easy: m.rest_reason_easy,
+	warmup: m.rest_reason_warmup,
+	pr: m.rest_reason_pr
+};
+/** Short label for an adapted rest, e.g. "Hard set · +30s". Empty when nothing changed. */
+export function restNote(reasons: RestReason[], delta: number) {
+	if (!reasons.length) return '';
+	const why = reasons.map((r) => REST_REASON[r]()).join(' · ');
+	if (!delta) return why;
+	return `${why} ${m.rest_delta({ sign: delta > 0 ? '+' : '−', n: Math.abs(delta) })}`;
 }
 
 export const fmtWeightValue = (kg: number | null | undefined, units: Units) =>

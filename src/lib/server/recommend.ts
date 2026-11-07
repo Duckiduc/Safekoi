@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, isNotNull, max, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, max, sql } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.ts';
 import {
 	exercise,
@@ -24,6 +24,10 @@ const TRACKED = [
 	'core'
 ] as const;
 
+/**
+ * The followed program with every day and its exercises. `nextIndex` is the day that's due
+ * (the one after the last program day you finished), but any day can be started.
+ */
 export async function nextProgramWorkout(userId: string) {
 	const [up] = await db
 		.select({ up: userProgram, p: program })
@@ -31,15 +35,15 @@ export async function nextProgramWorkout(userId: string) {
 		.innerJoin(program, eq(program.id, userProgram.programId))
 		.where(eq(userProgram.userId, userId));
 	if (!up) return null;
-	const days = await db
+	const templates = await db
 		.select()
 		.from(template)
 		.where(eq(template.programId, up.p.id))
 		.orderBy(asc(template.dayIndex));
-	const day = days[up.up.nextDay % days.length];
-	if (!day) return null;
+	if (!templates.length) return null;
 	const items = await db
 		.select({
+			templateId: templateExercise.templateId,
 			id: exercise.id,
 			name: exercise.name,
 			sets: templateExercise.targetSets,
@@ -48,14 +52,20 @@ export async function nextProgramWorkout(userId: string) {
 		})
 		.from(templateExercise)
 		.innerJoin(exercise, eq(exercise.id, templateExercise.exerciseId))
-		.where(eq(templateExercise.templateId, day.id))
+		.where(
+			inArray(
+				templateExercise.templateId,
+				templates.map((t) => t.id)
+			)
+		)
 		.orderBy(asc(templateExercise.position));
 	return {
 		program: up.p,
-		template: day,
-		dayNumber: (up.up.nextDay % days.length) + 1,
-		totalDays: days.length,
-		items
+		nextIndex: up.up.nextDay % templates.length,
+		days: templates.map((t) => ({
+			template: t,
+			items: items.filter((i) => i.templateId === t.id)
+		}))
 	};
 }
 
@@ -102,3 +112,5 @@ export async function weeklyVolume(userId: string, weeks = 6) {
 		.groupBy(week, exercise.muscleGroup)
 		.orderBy(desc(week));
 }
+
+export type ProgramPlan = NonNullable<Awaited<ReturnType<typeof nextProgramWorkout>>>;

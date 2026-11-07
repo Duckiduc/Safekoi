@@ -200,3 +200,60 @@ export function weekStartOf(d = new Date()): Date {
 }
 export const addDays = (d: Date, n: number) =>
 	new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+// ---- Rest times ----
+
+const round15 = (s: number) => Math.round(s / 15) * 15;
+
+/**
+ * A sensible rest for an exercise when the template doesn't set one: heavy compound lifts need
+ * the longest, isolation and core work the shortest.
+ */
+export function recommendedRest(
+	ex: { type: string; isCompound: boolean; muscleGroup: string; name?: string },
+	repMax?: number | null
+): number {
+	if (ex.type === 'duration' || ex.muscleGroup === 'core' || ex.muscleGroup === 'cardio') return 60;
+	const big = LOWER.has(ex.muscleGroup) || /deadlift/i.test(ex.name ?? '');
+	if (ex.isCompound) {
+		if ((repMax ?? 8) <= 6) return big ? 210 : 180;
+		return big ? 150 : 120;
+	}
+	return (repMax ?? 12) >= 15 ? 60 : 90;
+}
+
+export type RestReason = 'warmup' | 'hard' | 'missed' | 'easy' | 'pr';
+
+/**
+ * Adjusts the rest after a completed set based on how it went:
+ * longer after a hard set (RPE 9+) or missed reps, shorter after an easy set or a warm-up.
+ */
+export function adaptRest(
+	base: number,
+	set: { reps: number | null; rpe?: number | null; isWarmup?: boolean },
+	repMin?: number | null
+): { sec: number; reasons: RestReason[] } {
+	if (base <= 0) return { sec: 0, reasons: [] };
+	if (set.isWarmup)
+		return {
+			sec: Math.min(base, 90, Math.max(30, round15(base / 2))),
+			reasons: ['warmup']
+		};
+	let delta = 0;
+	const reasons: RestReason[] = [];
+	const rpe = set.rpe ?? null;
+	if (rpe != null && rpe >= 9) {
+		delta += rpe >= 9.5 ? 45 : 30;
+		reasons.push('hard');
+	}
+	if (repMin && set.reps != null && set.reps > 0 && set.reps < repMin) {
+		delta += 30;
+		reasons.push('missed');
+	}
+	if (!reasons.length && rpe != null && rpe <= 7) {
+		delta -= rpe <= 6 ? 30 : 15;
+		reasons.push('easy');
+	}
+	const sec = Math.max(30, Math.min(base + 90, round15(base + delta)));
+	return { sec, reasons };
+}

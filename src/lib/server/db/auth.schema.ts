@@ -29,7 +29,9 @@ export const user = pgTable('user', {
 	// app profile fields
 	units: text('units').default('kg').notNull(),
 	bodyweight: doublePrecision('bodyweight'),
-	defaultRestSec: integer('default_rest_sec').default(120).notNull()
+	defaultRestSec: integer('default_rest_sec').default(120).notNull(),
+	/** Recommend rest per exercise and adapt it to how each set went. */
+	smartRest: boolean('smart_rest').default(true).notNull()
 });
 
 export const session = pgTable(

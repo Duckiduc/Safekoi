@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { Play, Plus, ChevronRight, CalendarDays } from '@lucide/svelte';
 	import StartButton from '#lib/components/StartButton.svelte';
-	import { m, plural, exerciseName, templateName, programText } from '#lib/i18n.ts';
+	import ProgramNext from '#lib/components/ProgramNext.svelte';
+	import { m, exerciseName, templateName, programText } from '#lib/i18n.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -15,23 +16,7 @@
 	<h1 class="h1">{m.start_a_workout()}</h1>
 
 	{#if data.next}
-		<section class="mt-6 card border-accent/30 bg-gradient-to-br from-accent/10 to-transparent">
-			<div class="text-xs font-semibold tracking-wide text-accent uppercase">
-				{m.up_next({ program: programText(data.next.program).name })}
-			</div>
-			<div class="mt-1 text-xl font-bold">{templateName(data.next.template)}</div>
-			<div class="text-sm text-muted">
-				{m.day_of({ day: data.next.dayNumber, total: data.next.totalDays })} · {data.next.items
-					.length}
-				{plural(data.next.items.length, m.exercise_one(), m.exercise_other())}
-			</div>
-			<div class="mt-4">
-				<StartButton templateId={data.next.template.id}
-					><Play size={18} />
-					{m.start_named({ name: templateName(data.next.template) })}</StartButton
-				>
-			</div>
-		</section>
+		<div class="mt-6"><ProgramNext plan={data.next} compact /></div>
 	{/if}
 
 	<div class="mt-4">

@@ -15,6 +15,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 			role: user.role ?? 'user',
 			units: (user.units === 'lb' ? 'lb' : 'kg') as 'kg' | 'lb',
 			defaultRestSec: user.defaultRestSec ?? 120,
+			smartRest: user.smartRest ?? true,
 			bodyweight: user.bodyweight ?? null
 		},
 		activeWorkout: active ? { id: active.id, name: active.name, startedAt: active.startedAt } : null

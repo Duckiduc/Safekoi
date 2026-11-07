@@ -17,7 +17,14 @@
 	import { timer } from '#lib/timer.svelte.ts';
 	import { toast } from '#lib/toast.svelte.ts';
 	import { api, flush, pendingCount } from '#lib/sync.ts';
-	import { toDisplay, toKg, fmtDuration, type PrKind } from '#lib/fitness.ts';
+	import {
+		toDisplay,
+		toKg,
+		fmtDuration,
+		recommendedRest,
+		adaptRest,
+		type PrKind
+	} from '#lib/fitness.ts';
 	import {
 		m,
 		plural,
@@ -25,6 +32,7 @@
 		exerciseName,
 		muscleLabel,
 		suggestionText,
+		restNote,
 		fmtNumber
 	} from '#lib/i18n.ts';
 	import type { PageProps } from './$types';
@@ -73,7 +81,24 @@
 	const volume = $derived(
 		done.reduce((v, s) => v + (s.isWarmup ? 0 : (s.weight ?? 0) * (s.reps ?? 0)), 0)
 	);
-	const restFor = (we: WE) => we.restSec ?? data.user.defaultRestSec;
+	const smart = $derived(data.user.smartRest);
+	/** Usual rest for this exercise: its own setting, else recommended (smart rest) or the default. */
+	const restFor = (we: WE) =>
+		we.restSec ?? (smart ? recommendedRest(we.exercise, we.repMax) : data.user.defaultRestSec);
+	/** Rest after this set: with smart rest, adapted to how the set went. */
+	function planRest(we: WE, set: WSet, extra = 0) {
+		const base = restFor(we);
+		if (!smart) return { sec: base, note: '' };
+		const { sec, reasons } = adaptRest(base, set, we.repMin);
+		const total = extra && base > 0 ? Math.min(base + 90, sec + extra) : sec;
+		return { sec: total, note: restNote(extra ? [...reasons, 'pr'] : reasons, total - base) };
+	}
+	/** If this set's rest timer is running, update it after the set changed (RPE, reps, warm-up). */
+	function readjust(we: WE, set: WSet) {
+		if (!smart || !set.completedAt || timer.key !== set.id || !timer.running) return;
+		const { sec, note } = planRest(we, set);
+		timer.retarget(sec, note);
+	}
 
 	async function patchSet(set: WSet, fields: Record<string, unknown>) {
 		const res = await api<{ set: WSet; prs: PrKind[] }>('PATCH', `/api/sets/${set.id}`, fields, {
@@ -92,6 +117,8 @@
 		const value = field === 'weight' ? toKg(n, units) : n;
 		set[field] = value;
 		patchSet(set, { [field]: value });
+		if (field === 'rpe' || field === 'reps')
+			readjust(we ?? exercises.find((e) => e.sets.includes(set))!, set);
 		// Fill the same value into the empty, unfinished sets below.
 		if (we && value != null && field !== 'rpe') {
 			for (const s of we.sets.slice(we.sets.indexOf(set) + 1)) {
@@ -107,7 +134,11 @@
 		set.completedAt = completing ? new Date() : null;
 		if (completing) {
 			navigator.vibrate?.(15);
-			timer.start(restFor(we), m.timer_next_set({ exercise: exerciseName(we.exercise) }));
+			const { sec, note } = planRest(we, set);
+			timer.start(sec, m.timer_next_set({ exercise: exerciseName(we.exercise) }), {
+				note,
+				key: set.id
+			});
 		}
 		const res = await patchSet(set, {
 			completed: completing,
@@ -117,6 +148,17 @@
 		});
 		if (!res) return;
 		prSets[set.id] = res.prs;
+		// A new heaviest weight or best 1RM was probably a max effort: rest a bit longer.
+		if (
+			smart &&
+			set.rpe == null &&
+			timer.key === set.id &&
+			timer.running &&
+			res.prs.some((k) => k === 'e1rm' || k === 'max_weight')
+		) {
+			const { sec, note } = planRest(we, set, 30);
+			timer.retarget(sec, note);
+		}
 		if (res.prs.length) {
 			navigator.vibrate?.([40, 60, 40, 60, 120]);
 			toast(
@@ -160,7 +202,7 @@
 		);
 	}
 
-	async function setRest(we: WE, sec: number) {
+	async function setRest(we: WE, sec: number | null) {
 		we.restSec = sec;
 		await api('PATCH', `/api/workout-exercises/${we.id}`, { restSec: sec }, { queue: true });
 	}
@@ -171,9 +213,10 @@
 		await api('DELETE', `/api/sets/${set.id}`).catch(() => toast(m.err_delete_set(), 'error'));
 	}
 
-	async function toggleWarmup(set: WSet) {
+	async function toggleWarmup(we: WE, set: WSet) {
 		set.isWarmup = !set.isWarmup;
 		setMenu = null;
+		readjust(we, set);
 		const res = await patchSet(set, { isWarmup: set.isWarmup });
 		if (res) prSets[set.id] = res.prs;
 	}
@@ -414,10 +457,20 @@
 	{#if menuFor}
 		{@const we = menuFor}
 		<p class="label">{m.rest_timer()}</p>
+		{#if smart}
+			<button
+				class="mb-2 btn-ghost btn-sm w-full {we.restSec == null ? 'ring-2 ring-accent' : ''}"
+				onclick={() => setRest(we, null)}
+				>{m.rest_auto({ time: fmtDuration(recommendedRest(we.exercise, we.repMax)) })}</button
+			>
+		{/if}
 		<div class="grid grid-cols-4 gap-2">
 			{#each [60, 90, 120, 150, 180, 240, 300, 0] as sec (sec)}
 				<button
-					class="btn-ghost btn-sm {restFor(we) === sec ? 'ring-2 ring-accent' : ''}"
+					class="btn-ghost btn-sm {we.restSec === sec ||
+					(!smart && we.restSec == null && data.user.defaultRestSec === sec)
+						? 'ring-2 ring-accent'
+						: ''}"
 					onclick={() => setRest(we, sec)}>{sec ? fmtDuration(sec) : m.off()}</button
 				>
 			{/each}
@@ -450,7 +503,7 @@
 				value={set.rpe ?? ''}
 				onchange={(e) => edit(set, 'rpe', e.currentTarget.value)}
 			/>
-			<button class="mt-2 btn-ghost" onclick={() => toggleWarmup(set)}
+			<button class="mt-2 btn-ghost" onclick={() => toggleWarmup(we, set)}
 				>{set.isWarmup ? m.mark_working() : m.mark_warmup()}</button
 			>
 			<button class="btn-danger" onclick={() => deleteSet(we, set)}

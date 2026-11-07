@@ -210,7 +210,21 @@
 							>{Math.floor(s / 60)}:{String(s % 60).padStart(2, '0')}</option
 						>{/each}
 				</select>
+				<p class="mt-1 text-xs text-muted">{m.default_rest_hint()}</p>
 			</div>
+			<label class="flex cursor-pointer items-start gap-3">
+				<input
+					type="checkbox"
+					name="smartRest"
+					checked={u.smartRest}
+					class="mt-1 size-5 shrink-0 accent-accent"
+				/>
+				<span
+					><span class="block text-sm font-semibold">{m.smart_rest()}</span><span
+						class="block text-xs text-muted">{m.smart_rest_hint()}</span
+					></span
+				>
+			</label>
 			{#if form?.message}<p class="text-sm text-danger">{form.message}</p>{/if}
 			<button class="btn-primary">{m.save_profile()}</button>
 		</form>

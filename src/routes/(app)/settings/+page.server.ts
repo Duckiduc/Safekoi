@@ -14,7 +14,8 @@ const Profile = z.object({
 		.string()
 		.transform((v) => (v.trim() === '' ? null : Number(v.replace(',', '.'))))
 		.pipe(z.number().min(20).max(1000).nullable()),
-	defaultRestSec: z.coerce.number().int().min(0).max(1800)
+	defaultRestSec: z.coerce.number().int().min(0).max(1800),
+	smartRest: z.literal('on').optional()
 });
 
 export const actions: Actions = {
@@ -28,6 +29,7 @@ export const actions: Actions = {
 				name: d.name,
 				units: d.units,
 				defaultRestSec: d.defaultRestSec,
+				smartRest: d.smartRest === 'on',
 				bodyweight: d.bodyweight == null ? null : toKg(d.bodyweight, d.units)
 			})
 			.where(eq(user.id, locals.user!.id));

@@ -8,6 +8,10 @@ class RestTimer {
 	total = $state(0);
 	now = $state(Date.now());
 	label = $state('');
+	/** Why the rest differs from the usual, e.g. "Hard set +30s". */
+	note = $state('');
+	/** What started the timer (a set id), so later edits to that set can adjust it. */
+	key = $state('');
 	#tick: ReturnType<typeof setInterval> | null = null;
 	#wake: WakeLockSentinel | null = null;
 	#audio: AudioContext | null = null;
@@ -19,18 +23,28 @@ class RestTimer {
 	restore() {
 		try {
 			const s = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-			if (s && s.endAt > Date.now()) this.#run(s.endAt, s.total, s.label);
+			if (s && s.endAt > Date.now())
+				this.#run(s.endAt, s.total, s.label, s.note ?? '', s.key ?? '');
 		} catch {
 			/* ignore */
 		}
 	}
 
-	start(seconds: number, label = '') {
+	start(seconds: number, label = '', opts: { note?: string; key?: string } = {}) {
 		if (seconds <= 0) return;
 		this.#unlockAudio();
 		if (typeof Notification !== 'undefined' && Notification.permission === 'default')
 			Notification.requestPermission().catch(() => {});
-		this.#run(Date.now() + seconds * 1000, seconds, label);
+		this.#run(Date.now() + seconds * 1000, seconds, label, opts.note ?? '', opts.key ?? '');
+	}
+
+	/** Changes the planned rest of the running timer (keeps the time already rested). */
+	retarget(seconds: number, note: string) {
+		if (!this.running) return;
+		this.endAt = Math.max(Date.now() + 1000, this.endAt! + (seconds - this.total) * 1000);
+		this.total = seconds;
+		this.note = note;
+		this.#save();
 	}
 
 	add(seconds: number) {
@@ -53,10 +67,12 @@ class RestTimer {
 		}
 	}
 
-	#run(endAt: number, total: number, label: string) {
+	#run(endAt: number, total: number, label: string, note: string, key: string) {
 		this.endAt = endAt;
 		this.total = total;
 		this.label = label;
+		this.note = note;
+		this.key = key;
 		this.now = Date.now();
 		this.#save();
 		this.#keepAwake();
@@ -85,7 +101,13 @@ class RestTimer {
 		try {
 			localStorage.setItem(
 				KEY,
-				JSON.stringify({ endAt: this.endAt, total: this.total, label: this.label })
+				JSON.stringify({
+					endAt: this.endAt,
+					total: this.total,
+					label: this.label,
+					note: this.note,
+					key: this.key
+				})
 			);
 		} catch {
 			/* ignore */

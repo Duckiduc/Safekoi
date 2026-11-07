@@ -15,10 +15,13 @@ Better Auth (email/password, passkeys, admin) · Node 24 · Docker.
 - **Live logger** — start from a program day, a template, a past workout, or empty. Shows last
   session's sets, auto-fills weights down the list, warm-up sets, RPE, offline write queue.
 - **Rest timer** — starts when you tick a set; ±15s; vibration, beep and notification; keeps the
-  screen awake; survives reloads and the phone sleeping.
+  screen awake; survives reloads and the phone sleeping. **Smart rest** (on by default) recommends a
+  rest per exercise and adapts it after each set: longer after RPE 9+, missed reps or a record,
+  shorter after an easy set or a warm-up.
 - **PRs** — heaviest weight, estimated 1RM (Epley), best set volume, most reps, longest hold.
   Detected on every completed set, with a progress chart per exercise.
-- **Programs & suggestions** — Full Body 3×, 5×5, Upper/Lower, Push/Pull/Legs. Next session on Home;
+- **Programs & suggestions** — Full Body 3×, 5×5, Upper/Lower, Push/Pull/Legs. Next session on Home, or
+  pick any day of the program (the program continues after the day you did);
   weights go up when you hit the top of the rep range, deload 10% after two misses. kg or lb.
 - **History & stats** — weekly sets per muscle group, streaks, "not trained in a week".
 - **English & French** — follows the phone's language; switch anytime in Profile.

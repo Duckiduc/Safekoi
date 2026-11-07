@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Check, ChevronLeft } from '@lucide/svelte';
+	import { Check, ChevronLeft, Play } from '@lucide/svelte';
+	import StartButton from '#lib/components/StartButton.svelte';
 	import { m, exerciseName, templateName, programText } from '#lib/i18n.ts';
 	import type { PageProps } from './$types';
 
@@ -38,17 +39,24 @@
 				<p class="mt-3 text-sm text-muted">{p.description}</p>
 				<ol class="mt-3 grid gap-1.5 text-sm">
 					{#each p.days as d, i (d.id)}
-						<li class="flex gap-2">
+						<li class="flex items-start gap-2">
 							<span
 								class="flex size-5 shrink-0 items-center justify-center rounded-md text-[11px] font-bold num {on &&
 								data.active?.nextDay === i
 									? 'bg-accent text-accent-fg'
 									: 'bg-surface-2 text-muted'}">{i + 1}</span
 							>
-							<span
+							<span class="min-w-0 flex-1"
 								><span class="font-medium">{templateName(d)}</span>
 								<span class="text-muted">— {d.exercises.map(exerciseName).join(', ')}</span></span
 							>
+							{#if on}
+								<StartButton templateId={d.id} class="-my-1 btn-ghost btn-sm shrink-0"
+									><Play size={14} /><span class="sr-only"
+										>{m.start_named({ name: templateName(d) })}</span
+									></StartButton
+								>
+							{/if}
 						</li>
 					{/each}
 				</ol>

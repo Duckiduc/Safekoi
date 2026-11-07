@@ -23,7 +23,8 @@ export const auth = betterAuth({
 		additionalFields: {
 			units: { type: 'string', defaultValue: 'kg', input: false },
 			bodyweight: { type: 'number', required: false, input: false },
-			defaultRestSec: { type: 'number', defaultValue: 120, input: false }
+			defaultRestSec: { type: 'number', defaultValue: 120, input: false },
+			smartRest: { type: 'boolean', defaultValue: true, input: false }
 		}
 	},
 	databaseHooks: {

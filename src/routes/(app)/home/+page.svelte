@@ -1,17 +1,9 @@
 <script lang="ts">
-	import { Play, Flame, Trophy, Dumbbell, ChevronRight, CircleDot } from '@lucide/svelte';
+	import { Flame, Trophy, Dumbbell, ChevronRight, CircleDot } from '@lucide/svelte';
 	import StartButton from '#lib/components/StartButton.svelte';
+	import ProgramNext from '#lib/components/ProgramNext.svelte';
 	import { weekStreak, weekStartOf, addDays, toDisplay, fmtDuration } from '#lib/fitness.ts';
-	import {
-		m,
-		plural,
-		prLabel,
-		exerciseName,
-		templateName,
-		programText,
-		muscleLabel,
-		fmtNumber
-	} from '#lib/i18n.ts';
+	import { m, plural, prLabel, exerciseName, muscleLabel, fmtNumber } from '#lib/i18n.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -107,30 +99,7 @@
 
 	{#if !data.activeWorkout}
 		{#if data.next}
-			<section
-				class="mt-4 card border-accent/30 bg-gradient-to-br from-accent/12 via-transparent to-transparent"
-			>
-				<div class="text-xs font-semibold tracking-wide text-accent uppercase">
-					{m.recommended({ program: programText(data.next.program).name })}
-				</div>
-				<div class="mt-1 text-2xl font-bold">{templateName(data.next.template)}</div>
-				<ul class="mt-3 grid gap-1 text-sm">
-					{#each data.next.items as it (it.id)}
-						<li class="flex justify-between">
-							<span>{exerciseName(it)}</span><span class="text-muted num"
-								>{it.sets} × {it.repMin === it.repMax
-									? it.repMin
-									: `${it.repMin}–${it.repMax}`}</span
-							>
-						</li>
-					{/each}
-				</ul>
-				<div class="mt-4">
-					<StartButton templateId={data.next.template.id}
-						><Play size={18} /> {m.start_workout()}</StartButton
-					>
-				</div>
-			</section>
+			<div class="mt-4"><ProgramNext plan={data.next} /></div>
 		{:else}
 			<section class="mt-4 card">
 				<div class="flex items-center gap-2 font-semibold">

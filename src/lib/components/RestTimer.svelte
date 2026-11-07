@@ -33,7 +33,9 @@
 				<TimerIcon size={18} class="text-accent" />
 				<div>
 					<div class="text-2xl leading-none font-bold num">{fmtDuration(timer.remaining)}</div>
-					{#if timer.label}<div class="max-w-[9rem] truncate text-[11px] text-muted">
+					{#if timer.note}<div class="max-w-[9rem] truncate text-[11px] font-medium text-accent">
+							{timer.note}
+						</div>{:else if timer.label}<div class="max-w-[9rem] truncate text-[11px] text-muted">
 							{timer.label}
 						</div>{/if}
 				</div>

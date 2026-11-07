@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
+	adaptRest,
+	recommendedRest,
 	e1rm,
 	prCandidates,
 	newPrs,
@@ -131,5 +133,58 @@ describe('progression in pounds', () => {
 		);
 		expect(toDisplay(s.weight, 'lb')).toBe(235);
 		expect(s.reason).toContain('10 lb');
+	});
+});
+
+describe('recommendedRest', () => {
+	const ex = (
+		o: Partial<{ type: string; isCompound: boolean; muscleGroup: string; name: string }>
+	) => ({
+		type: 'weight_reps',
+		isCompound: false,
+		muscleGroup: 'biceps',
+		...o
+	});
+	it('gives heavy lower-body compounds the most rest', () => {
+		expect(recommendedRest(ex({ isCompound: true, muscleGroup: 'quads' }), 5)).toBe(210);
+		expect(
+			recommendedRest(ex({ isCompound: true, muscleGroup: 'back', name: 'Deadlift' }), 5)
+		).toBe(210);
+		expect(recommendedRest(ex({ isCompound: true, muscleGroup: 'chest' }), 5)).toBe(180);
+		expect(recommendedRest(ex({ isCompound: true, muscleGroup: 'chest' }), 10)).toBe(120);
+	});
+	it('keeps isolation, core and timed work short', () => {
+		expect(recommendedRest(ex({}), 12)).toBe(90);
+		expect(recommendedRest(ex({}), 15)).toBe(60);
+		expect(recommendedRest(ex({ muscleGroup: 'core' }), 12)).toBe(60);
+		expect(recommendedRest(ex({ type: 'duration' }))).toBe(60);
+	});
+});
+
+describe('adaptRest', () => {
+	it('keeps the base rest for a normal set', () => {
+		expect(adaptRest(120, { reps: 8, rpe: 8 }, 6)).toEqual({ sec: 120, reasons: [] });
+		expect(adaptRest(120, { reps: 8 }, 6)).toEqual({ sec: 120, reasons: [] });
+	});
+	it('rests longer after a hard set or missed reps, capped at +90s', () => {
+		expect(adaptRest(120, { reps: 8, rpe: 9 }, 6)).toEqual({ sec: 150, reasons: ['hard'] });
+		expect(adaptRest(120, { reps: 4 }, 6)).toEqual({ sec: 150, reasons: ['missed'] });
+		expect(adaptRest(120, { reps: 4, rpe: 10 }, 6)).toEqual({
+			sec: 195,
+			reasons: ['hard', 'missed']
+		});
+	});
+	it('rests less after an easy set or a warm-up', () => {
+		expect(adaptRest(120, { reps: 8, rpe: 7 }, 6)).toEqual({ sec: 105, reasons: ['easy'] });
+		expect(adaptRest(120, { reps: 8, rpe: 6 }, 6)).toEqual({ sec: 90, reasons: ['easy'] });
+		expect(adaptRest(180, { reps: 5, isWarmup: true }, 5)).toEqual({
+			sec: 90,
+			reasons: ['warmup']
+		});
+		expect(adaptRest(60, { reps: 5, isWarmup: true }, 5)).toEqual({ sec: 30, reasons: ['warmup'] });
+	});
+	it('never goes under 30s and respects a disabled timer', () => {
+		expect(adaptRest(30, { reps: 8, rpe: 5 }, 6).sec).toBe(30);
+		expect(adaptRest(0, { reps: 8, rpe: 10 }, 6)).toEqual({ sec: 0, reasons: [] });
 	});
 });
