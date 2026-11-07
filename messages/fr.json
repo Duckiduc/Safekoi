@@ -316,5 +316,19 @@
 	"confirm_delete_user": "Supprimer définitivement {email} et toutes ses données ?",
 	"delete_account": "Supprimer le compte",
 	"share_password_hint": "Transmets-le ; la personne pourra le changer dans son profil.",
-	"progress_chart": "Graphique de progression"
+	"progress_chart": "Graphique de progression",
+	"choose_day": "Choisir une séance",
+	"day_due": "Prochaine",
+	"day_due_hint": "prochaine séance du programme",
+	"day_picked_hint": "{due} était prévue. Le programme reprendra après celle-ci.",
+	"default_rest_hint": "Utilisé quand le repos intelligent est désactivé et qu’un exercice n’a pas de repos défini.",
+	"smart_rest": "Repos intelligent",
+	"smart_rest_hint": "Propose un repos pour chaque exercice et l’ajuste après chaque série : plus long après une série difficile (RPE 9+), des répétitions manquées ou un record, plus court après une série facile ou un échauffement.",
+	"rest_auto": "Auto · {time}",
+	"rest_delta": "{sign}{n} s",
+	"rest_reason_hard": "Série difficile",
+	"rest_reason_missed": "Répétitions manquées",
+	"rest_reason_easy": "Série facile",
+	"rest_reason_warmup": "Échauffement",
+	"rest_reason_pr": "Nouveau record"
 }

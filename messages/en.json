@@ -316,5 +316,19 @@
 	"confirm_delete_user": "Permanently delete {email} and all their data?",
 	"delete_account": "Delete account",
 	"share_password_hint": "Share it with them; they can change it in Profile.",
-	"progress_chart": "Progress chart"
+	"progress_chart": "Progress chart",
+	"choose_day": "Choose a day",
+	"day_due": "Due next",
+	"day_due_hint": "next in your program",
+	"day_picked_hint": "{due} was next. The program continues after this one.",
+	"default_rest_hint": "Used when smart rest is off and an exercise has no rest time of its own.",
+	"smart_rest": "Smart rest",
+	"smart_rest_hint": "Suggests a rest for each exercise and adjusts it after every set: longer after a hard set (RPE 9+), missed reps or a new record, shorter after an easy set or a warm-up.",
+	"rest_auto": "Auto · {time}",
+	"rest_delta": "{sign}{n}s",
+	"rest_reason_hard": "Hard set",
+	"rest_reason_missed": "Missed reps",
+	"rest_reason_easy": "Easy set",
+	"rest_reason_warmup": "Warm-up",
+	"rest_reason_pr": "New record"
 }
