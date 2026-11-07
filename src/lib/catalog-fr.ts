@@ -1,0 +1,122 @@
+// French names for the built-in catalog. Keys are exercise ids / program ids / template ids.
+export const EXERCISES_FR: Record<string, string> = {
+	'bench-press': 'Développé couché',
+	'incline-bench-press': 'Développé incliné',
+	'dumbbell-bench-press': 'Développé couché haltères',
+	'incline-dumbbell-press': 'Développé incliné haltères',
+	'decline-bench-press': 'Développé décliné',
+	'chest-press-machine': 'Presse pectoraux',
+	'cable-fly': 'Écarté à la poulie',
+	'dumbbell-fly': 'Écarté haltères',
+	'pec-deck': 'Pec deck',
+	'push-up': 'Pompes',
+	dips: 'Dips',
+	deadlift: 'Soulevé de terre',
+	'barbell-row': 'Rowing barre',
+	'pendlay-row': 'Rowing Pendlay',
+	'pull-up': 'Tractions pronation',
+	'chin-up': 'Tractions supination',
+	'lat-pulldown': 'Tirage vertical',
+	'seated-cable-row': 'Tirage horizontal assis',
+	'dumbbell-row': 'Rowing haltère',
+	't-bar-row': 'Rowing T-bar',
+	'chest-supported-row': 'Rowing poitrine appuyée',
+	'straight-arm-pulldown': 'Pull-over à la poulie',
+	'rack-pull': 'Rack pull',
+	'back-extension': 'Extensions lombaires',
+	'overhead-press': 'Développé militaire',
+	'seated-dumbbell-press': 'Développé épaules haltères',
+	'arnold-press': 'Développé Arnold',
+	'shoulder-press-machine': 'Presse épaules',
+	'lateral-raise': 'Élévations latérales',
+	'cable-lateral-raise': 'Élévations latérales poulie',
+	'rear-delt-fly': 'Oiseau',
+	'face-pull': 'Face pull',
+	'upright-row': 'Rowing menton',
+	shrug: 'Shrugs',
+	'barbell-curl': 'Curl barre',
+	'dumbbell-curl': 'Curl haltères',
+	'hammer-curl': 'Curl marteau',
+	'incline-dumbbell-curl': 'Curl incliné haltères',
+	'preacher-curl': 'Curl pupitre',
+	'cable-curl': 'Curl poulie',
+	'triceps-pushdown': 'Extensions triceps poulie',
+	'overhead-triceps-extension': 'Extensions triceps nuque',
+	'skull-crusher': 'Barre au front',
+	'close-grip-bench-press': 'Développé couché prise serrée',
+	'wrist-curl': 'Curl poignets',
+	'farmer-s-carry': 'Marche du fermier',
+	squat: 'Squat',
+	'front-squat': 'Squat avant',
+	'leg-press': 'Presse à cuisses',
+	'hack-squat': 'Hack squat',
+	'bulgarian-split-squat': 'Squat bulgare',
+	'walking-lunge': 'Fentes marchées',
+	'goblet-squat': 'Goblet squat',
+	'leg-extension': 'Leg extension',
+	'romanian-deadlift': 'Soulevé de terre roumain',
+	'lying-leg-curl': 'Leg curl allongé',
+	'seated-leg-curl': 'Leg curl assis',
+	'good-morning': 'Good morning',
+	'hip-thrust': 'Hip thrust',
+	'glute-bridge': 'Pont fessier',
+	'cable-kickback': 'Kickback poulie',
+	'hip-abduction': 'Abduction hanche',
+	'standing-calf-raise': 'Mollets debout',
+	'seated-calf-raise': 'Mollets assis',
+	plank: 'Gainage',
+	'hanging-leg-raise': 'Relevés de jambes suspendu',
+	'cable-crunch': 'Crunch à la poulie',
+	'ab-wheel-rollout': 'Roue abdominale',
+	'russian-twist': 'Russian twist',
+	'pallof-press': 'Pallof press',
+	'power-clean': 'Épaulé',
+	'kettlebell-swing': 'Swing kettlebell',
+	thruster: 'Thruster',
+	burpee: 'Burpees',
+	'rowing-machine': 'Rameur',
+	treadmill: 'Tapis de course',
+	'stationary-bike': 'Vélo',
+	'jump-rope': 'Corde à sauter'
+};
+
+export const PROGRAMS_FR: Record<string, { name: string; description: string; level: string }> = {
+	'full-body': {
+		name: 'Full body 3×',
+		level: 'Débutant',
+		description:
+			'Trois séances complètes par semaine. Idéal pour construire une base et apprendre les mouvements principaux.'
+	},
+	'stronglifts-5x5': {
+		name: 'Force 5×5',
+		level: 'Débutant',
+		description:
+			'Alterne deux séances simples. Cinq séries de cinq sur les gros mouvements, on ajoute du poids à chaque séance.'
+	},
+	'upper-lower': {
+		name: 'Haut / Bas',
+		level: 'Intermédiaire',
+		description:
+			'Quatre jours par semaine, chaque muscle travaillé deux fois. Mélange de force et d’hypertrophie.'
+	},
+	ppl: {
+		name: 'Push / Pull / Legs',
+		level: 'Intermédiaire',
+		description: 'Le split classique. 3× par semaine, ou deux cycles pour 6 jours.'
+	}
+};
+
+export const TEMPLATES_FR: Record<string, string> = {
+	'full-body-0': 'Full body A',
+	'full-body-1': 'Full body B',
+	'full-body-2': 'Full body C',
+	'stronglifts-5x5-0': '5×5 Séance A',
+	'stronglifts-5x5-1': '5×5 Séance B',
+	'upper-lower-0': 'Haut A (force)',
+	'upper-lower-1': 'Bas A (force)',
+	'upper-lower-2': 'Haut B (volume)',
+	'upper-lower-3': 'Bas B (volume)',
+	'ppl-0': 'Push',
+	'ppl-1': 'Pull',
+	'ppl-2': 'Legs'
+};
