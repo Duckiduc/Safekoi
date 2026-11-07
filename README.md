@@ -48,18 +48,20 @@ npm run dev                     # http://localhost:5173
 The app applies migrations and refreshes the built-in exercises on every start.
 
 1. Point a domain at the host through your reverse proxy with HTTPS (passkeys require HTTPS),
-   e.g. `safekoi.example.com` → `http://<host>:3000`.
-2. In Portainer, create a stack from this repo (or upload the folder) using `compose.prod.yaml`,
-   and set these environment variables:
+   e.g. `safekoi.example.com` → `http://127.0.0.1:3300`.
+2. In Portainer: **Add stack** → build method **Repository** → URL
+   `https://github.com/Duckiduc/Safekoi`, reference `refs/heads/main`, compose path
+   `compose.prod.yaml`. Turn on **GitOps updates** (polling): every push to `main` rebuilds and
+   redeploys the app. Set these environment variables:
 
-   | Variable                  | Example                             |
-   | ------------------------- | ----------------------------------- |
-   | `ORIGIN`                  | `https://safekoi.example.com`       |
-   | `PASSKEY_RP_ID`           | `safekoi.example.com`               |
-   | `BETTER_AUTH_SECRET`      | output of `openssl rand -base64 32` |
-   | `POSTGRES_PASSWORD`       | a long random string                |
-   | `APP_PORT` _(optional)_   | `3000`                              |
-   | `BACKUP_DIR` _(optional)_ | `/srv/safekoi/backups`              |
+   | Variable                | Example                                           |
+   | ----------------------- | ------------------------------------------------- |
+   | `ORIGIN`                | `https://safekoi.example.com`                     |
+   | `PASSKEY_RP_ID`         | `safekoi.example.com`                             |
+   | `BETTER_AUTH_SECRET`    | output of `openssl rand -base64 32`               |
+   | `POSTGRES_PASSWORD`     | a long random string                              |
+   | `BACKUP_DIR`            | an absolute folder, e.g. `/srv/safekoi/backups`   |
+   | `APP_PORT` _(optional)_ | `127.0.0.1:3300` (default `3000`, all interfaces) |
 
 3. Deploy, open the site, and register — the first account becomes admin.
 4. If the site is reachable from the internet, turn off **Public sign-up** in `/admin/users`
