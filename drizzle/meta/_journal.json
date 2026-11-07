@@ -15,6 +15,13 @@
       "when": 1794051745809,
       "tag": "0001_app_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794062560962,
+      "tag": "0002_smart_rest",
+      "breakpoints": true
     }
   ]
 }
