@@ -1,0 +1,56 @@
+# Production stack — deploy as a Portainer stack (or `docker compose -f compose.prod.yaml up -d`).
+# Set the variables below in Portainer's "Environment variables" section or a .env file.
+name: safekoi
+services:
+  app:
+    build: .
+    image: safekoi:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://safekoi:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/safekoi
+      ORIGIN: ${ORIGIN:?set ORIGIN, e.g. https://safekoi.example.com}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET (openssl rand -base64 32)}
+      PASSKEY_RP_ID: ${PASSKEY_RP_ID:?set PASSKEY_RP_ID, e.g. safekoi.example.com}
+      # Behind a reverse proxy (Traefik/Caddy/NPM) so client IPs are correct:
+      ADDRESS_HEADER: X-Forwarded-For
+      XFF_DEPTH: 1
+    ports:
+      - ${APP_PORT:-3000}:3000
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: safekoi
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: safekoi
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U safekoi -d safekoi]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Nightly pg_dump, keeps 7 daily / 4 weekly / 6 monthly backups in ./backups
+  backup:
+    image: prodrigestivill/postgres-backup-local:17
+    restart: unless-stopped
+    depends_on: [db]
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: safekoi
+      POSTGRES_USER: safekoi
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE: '@daily'
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+
+volumes:
+  pgdata:

@@ -1,0 +1,15 @@
+# Dev database
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: safekoi
+      POSTGRES_PASSWORD: safekoi
+      POSTGRES_DB: safekoi
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
