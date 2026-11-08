@@ -22,6 +22,13 @@
       "when": 1794062560962,
       "tag": "0002_smart_rest",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794178519504,
+      "tag": "0003_training_together",
+      "breakpoints": true
     }
   ]
 }

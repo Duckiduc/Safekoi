@@ -119,6 +119,17 @@ export const userProgram = pgTable('user_program', {
 	startedAt: timestamp('started_at').defaultNow().notNull()
 });
 
+/** A workout done together: each person logs their own workout, linked to the same session. */
+export const trainingSession = pgTable('training_session', {
+	id: id(),
+	/** Secret part of the invite link. */
+	code: text('code').notNull().unique(),
+	hostId: text('host_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
 export const workout = pgTable(
 	'workout',
 	{
@@ -130,9 +141,13 @@ export const workout = pgTable(
 		name: text('name').notNull(),
 		notes: text('notes'),
 		startedAt: timestamp('started_at').defaultNow().notNull(),
-		finishedAt: timestamp('finished_at')
+		finishedAt: timestamp('finished_at'),
+		sessionId: text('session_id').references(() => trainingSession.id, { onDelete: 'set null' })
 	},
-	(t) => [index('workout_user_started_idx').on(t.userId, t.startedAt)]
+	(t) => [
+		index('workout_user_started_idx').on(t.userId, t.startedAt),
+		index('workout_session_idx').on(t.sessionId)
+	]
 );
 
 export const workoutExercise = pgTable(

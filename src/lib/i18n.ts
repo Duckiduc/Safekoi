@@ -108,6 +108,15 @@ export const fmtDate = (d: Date | string, opts?: Intl.DateTimeFormatOptions) =>
 export const fmtDateTime = (d: Date | string, opts?: Intl.DateTimeFormatOptions) =>
 	new Date(d).toLocaleString(getLocale(), opts);
 
+/** "2 min ago", "now"… in the current language. */
+export function fmtAgo(d: Date | string, now = Date.now()) {
+	const s = Math.round((new Date(d).getTime() - now) / 1000);
+	const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto', style: 'short' });
+	if (Math.abs(s) < 45) return rtf.format(0, 'second');
+	if (Math.abs(s) < 3600) return rtf.format(Math.round(s / 60), 'minute');
+	return rtf.format(Math.round(s / 3600), 'hour');
+}
+
 export const fmtNumber = (n: number | null | undefined) =>
 	n == null ? '–' : n.toLocaleString(getLocale());
 

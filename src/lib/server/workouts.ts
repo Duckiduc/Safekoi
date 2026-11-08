@@ -125,16 +125,18 @@ async function prefillSets(
 	if (rows.length) await tx.insert(workoutSet).values(rows);
 }
 
+export type NewWorkoutItem = {
+	ex: ExerciseRow;
+	sets: number;
+	repMin: number;
+	repMax: number;
+	restSec: number | null;
+};
+
 export async function createWorkout(userId: string, templateId?: string | null) {
 	return db.transaction(async (tx) => {
 		let name: string;
-		let items: {
-			ex: ExerciseRow;
-			sets: number;
-			repMin: number;
-			repMax: number;
-			restSec: number | null;
-		}[] = [];
+		let items: NewWorkoutItem[] = [];
 		if (templateId) {
 			const [t] = await tx
 				.select()
@@ -164,31 +166,41 @@ export async function createWorkout(userId: string, templateId?: string | null) 
 			const h = new Date().getHours();
 			name = h < 11 ? m.workout_morning() : h < 17 ? m.workout_afternoon() : m.workout_evening();
 		}
-		const [w] = await tx
-			.insert(workout)
-			.values({ userId, templateId: templateId ?? null, name })
-			.returning();
-		for (const [position, it] of items.entries()) {
-			const [we] = await tx
-				.insert(workoutExercise)
-				.values({
-					workoutId: w.id,
-					exerciseId: it.ex.id,
-					position,
-					restSec: it.restSec,
-					repMin: it.repMin,
-					repMax: it.repMax
-				})
-				.returning();
-			await prefillSets(tx, userId, it.ex, we.id, {
-				sets: it.sets,
-				repMin: it.repMin,
-				repMax: it.repMax,
-				workoutId: w.id
-			});
-		}
-		return w;
+		return insertWorkout(tx, userId, { name, templateId: templateId ?? null }, items);
 	});
+}
+
+/** Creates a workout with these exercises, pre-filling each set from the user's own history. */
+export async function insertWorkout(
+	tx: DB,
+	userId: string,
+	fields: { name: string; templateId: string | null; sessionId?: string | null },
+	items: NewWorkoutItem[]
+) {
+	const [w] = await tx
+		.insert(workout)
+		.values({ userId, ...fields })
+		.returning();
+	for (const [position, it] of items.entries()) {
+		const [we] = await tx
+			.insert(workoutExercise)
+			.values({
+				workoutId: w.id,
+				exerciseId: it.ex.id,
+				position,
+				restSec: it.restSec,
+				repMin: it.repMin,
+				repMax: it.repMax
+			})
+			.returning();
+		await prefillSets(tx, userId, it.ex, we.id, {
+			sets: it.sets,
+			repMin: it.repMin,
+			repMax: it.repMax,
+			workoutId: w.id
+		});
+	}
+	return w;
 }
 
 export async function addExerciseToWorkout(userId: string, workoutId: string, exerciseId: string) {

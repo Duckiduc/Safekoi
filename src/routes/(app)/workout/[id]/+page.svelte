@@ -10,9 +10,16 @@
 		Timer as TimerIcon,
 		Trash2,
 		Flag,
-		CloudOff
+		CloudOff,
+		Maximize2,
+		Users,
+		Share2,
+		Copy
 	} from '@lucide/svelte';
 	import ExercisePicker from '#lib/components/ExercisePicker.svelte';
+	import FocusView from '#lib/components/FocusView.svelte';
+	import Partners from '#lib/components/Partners.svelte';
+	import type { SessionProgress } from '#lib/server/together.ts';
 	import Sheet from '#lib/components/Sheet.svelte';
 	import { timer } from '#lib/timer.svelte.ts';
 	import { toast } from '#lib/toast.svelte.ts';
@@ -62,7 +69,24 @@
 	let setMenu = $state<{ we: WE; set: WSet } | null>(null);
 	let offline = $state(0);
 
+	// List or full-screen focus view; the choice is remembered on this device.
+	const VIEW_KEY = 'safekoi.logger-view';
+	let view = $state<'list' | 'focus'>('list');
+	function setView(v: 'list' | 'focus') {
+		view = v;
+		try {
+			localStorage.setItem(VIEW_KEY, v);
+		} catch {
+			/* ignore */
+		}
+	}
+
 	onMount(() => {
+		try {
+			if (!finished && localStorage.getItem(VIEW_KEY) === 'focus') view = 'focus';
+		} catch {
+			/* ignore */
+		}
 		const t = setInterval(() => (now = Date.now()), 1000);
 		const sync = async () => {
 			await flush();
@@ -77,6 +101,57 @@
 	});
 
 	const elapsed = $derived(Math.floor((now - new Date(data.workout.startedAt).getTime()) / 1000));
+
+	// ---- Training together ----
+	// svelte-ignore state_referenced_locally
+	let shared = $state(!!data.workout.sessionId);
+	let together = $state<SessionProgress | null>(null);
+	let inviteOpen = $state(false);
+	const inviteUrl = $derived(together ? `${location.origin}/join/${together.code}` : '');
+
+	async function loadTogether() {
+		together = await api<SessionProgress | null>(
+			'GET',
+			`/api/workouts/${data.workout.id}/together`
+		).catch(() => together);
+		if (!together) shared = false;
+	}
+	// Refresh partners' progress every 5 seconds while the page is visible.
+	$effect(() => {
+		if (!shared) return;
+		loadTogether();
+		const t = setInterval(() => document.visibilityState === 'visible' && loadTogether(), 5000);
+		return () => clearInterval(t);
+	});
+
+	async function openInvite() {
+		inviteOpen = true;
+		if (!shared) {
+			const ok = await api('POST', `/api/workouts/${data.workout.id}/together`).catch(() => null);
+			if (!ok) return toast(m.err_together_start(), 'error');
+			shared = true;
+		}
+		await loadTogether();
+	}
+	async function shareInvite() {
+		const text = m.together_share_text({ name });
+		try {
+			if (navigator.share) return await navigator.share({ title: 'Safekoi', text, url: inviteUrl });
+		} catch {
+			return; // cancelled
+		}
+		copyInvite();
+	}
+	async function copyInvite() {
+		await navigator.clipboard?.writeText(inviteUrl).catch(() => {});
+		toast(m.together_copied());
+	}
+	async function stopTogether() {
+		await api('DELETE', `/api/workouts/${data.workout.id}/together`).catch(() => null);
+		shared = false;
+		together = null;
+		inviteOpen = false;
+	}
 	const done = $derived(exercises.flatMap((e) => e.sets).filter((s) => s.completedAt));
 	const volume = $derived(
 		done.reduce((v, s) => v + (s.isWarmup ? 0 : (s.weight ?? 0) * (s.reps ?? 0)), 0)
@@ -115,14 +190,16 @@
 		const n = raw === '' ? null : Number(raw.replace(',', '.'));
 		if (n !== null && (Number.isNaN(n) || n < 0)) return;
 		const value = field === 'weight' ? toKg(n, units) : n;
+		const old = set[field];
 		set[field] = value;
 		patchSet(set, { [field]: value });
 		if (field === 'rpe' || field === 'reps')
 			readjust(we ?? exercises.find((e) => e.sets.includes(set))!, set);
-		// Fill the same value into the empty, unfinished sets below.
+		// Carry the new value to the unfinished sets below that were empty or had the old value.
 		if (we && value != null && field !== 'rpe') {
 			for (const s of we.sets.slice(we.sets.indexOf(set) + 1)) {
-				if (s.completedAt || s.isWarmup !== set.isWarmup || s[field] != null) continue;
+				if (s.completedAt || s.isWarmup !== set.isWarmup) continue;
+				if (s[field] != null && s[field] !== old) continue;
 				s[field] = value;
 				patchSet(s, { [field]: value });
 			}
@@ -298,6 +375,9 @@
 			</div>
 		</div>
 		{#if !finished}
+			<button class="btn-ghost btn-sm" onclick={() => setView('focus')}
+				><Maximize2 size={16} /> {m.focus_mode()}</button
+			>
 			<button class="btn-primary btn-sm" onclick={() => (finishOpen = true)}
 				><Flag size={16} /> {m.finish()}</button
 			>
@@ -305,7 +385,30 @@
 	</div>
 </header>
 
+{#if view === 'focus' && !finished}
+	<FocusView
+		{exercises}
+		{units}
+		{elapsed}
+		oncomplete={toggle}
+		onedit={edit}
+		onfinish={() => {
+			view = 'list';
+			finishOpen = true;
+		}}
+		onexit={() => setView('list')}
+		top={shared && together ? partnersTop : undefined}
+	/>
+{/if}
+
+{#snippet partnersTop()}
+	{#if together}<Partners progress={together} {units} oninvite={openInvite} compact />{/if}
+{/snippet}
+
 <main class="mx-auto w-full max-w-xl px-4 pt-4 pb-48">
+	{#if shared && together && !finished}
+		<div class="mb-4"><Partners progress={together} {units} oninvite={openInvite} /></div>
+	{/if}
 	{#each exercises as we (we.id)}
 		{@const type = we.exercise.type}
 		<section id="we-{we.id}" class="mb-4 scroll-mt-24 card p-0">
@@ -441,6 +544,9 @@
 		<button class="btn-ghost w-full" onclick={() => (pickerOpen = true)}
 			><Plus size={18} /> {m.add_exercise()}</button
 		>
+		<button class="mt-2 btn-ghost w-full" onclick={openInvite}
+			><Users size={18} /> {m.together_title()}</button
+		>
 		<button class="mt-8 w-full text-center text-sm text-danger" onclick={discard}
 			>{m.discard_workout()}</button
 		>
@@ -511,6 +617,39 @@
 			>
 			<button class="btn-ghost" onclick={() => (setMenu = null)}>{m.done()}</button>
 		</div>
+	{/if}
+</Sheet>
+
+<Sheet bind:open={inviteOpen} title={m.together_title()}>
+	<p class="text-sm text-muted">{m.together_invite_intro()}</p>
+	{#if together}
+		<div class="mt-4 truncate rounded-xl bg-surface-2 px-3 py-2.5 text-sm num select-all">
+			{inviteUrl}
+		</div>
+		<div class="mt-3 grid grid-cols-2 gap-2">
+			<button class="btn-primary" onclick={shareInvite}
+				><Share2 size={18} /> {m.together_share()}</button
+			>
+			<button class="btn-ghost" onclick={copyInvite}><Copy size={18} /> {m.together_copy()}</button>
+		</div>
+		<p class="mt-6 label">{m.together_people()}</p>
+		<ul class="grid grid-cols-1 gap-1.5 text-sm">
+			{#each together.people as p (p.userId)}
+				<li class="flex justify-between gap-3">
+					<span class="truncate font-medium">{p.me ? m.together_you() : p.name}</span>
+					<span class="shrink-0 text-muted num"
+						>{p.finished
+							? m.together_finished()
+							: m.together_sets({ done: p.setsDone, total: p.setsTotal })}</span
+					>
+				</li>
+			{/each}
+		</ul>
+		<button class="mt-6 btn-ghost w-full text-danger" onclick={stopTogether}
+			>{m.together_stop()}</button
+		>
+	{:else}
+		<p class="mt-4 text-sm text-muted">…</p>
 	{/if}
 </Sheet>
 
