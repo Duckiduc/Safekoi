@@ -160,7 +160,7 @@
 			use:enhance={() =>
 				({ update }) =>
 					update({ reset: false })}
-			class="mt-4 grid gap-4"
+			class="mt-4 grid grid-cols-1 gap-4"
 		>
 			<div>
 				<label class="label" for="name">{m.name()}</label><input

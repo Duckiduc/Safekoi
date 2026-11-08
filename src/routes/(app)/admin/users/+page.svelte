@@ -136,7 +136,7 @@
 <Sheet open={selected !== null} title={selected?.email} onclose={() => (selected = null)}>
 	{#if selected}
 		{@const u = selected}
-		<div class="grid gap-2">
+		<div class="grid grid-cols-1 gap-2">
 			<form method="POST" action="?/role" use:enhance={after}>
 				<input type="hidden" name="userId" value={u.id} /><input
 					type="hidden"
@@ -174,7 +174,7 @@
 					>
 				</form>
 			{:else}
-				<form method="POST" action="?/ban" use:enhance={after} class="grid gap-2">
+				<form method="POST" action="?/ban" use:enhance={after} class="grid grid-cols-1 gap-2">
 					<input type="hidden" name="userId" value={u.id} />
 					<input class="input" name="reason" placeholder={m.ban_reason()} />
 					<button class="btn-danger w-full"><Ban size={16} /> {m.ban_user()}</button>
@@ -195,7 +195,7 @@
 </Sheet>
 
 <Sheet bind:open={addOpen} title={m.add_user()}>
-	<form method="POST" action="?/create" use:enhance={after} class="grid gap-4">
+	<form method="POST" action="?/create" use:enhance={after} class="grid grid-cols-1 gap-4">
 		<div>
 			<label class="label" for="nu-name">{m.name()}</label><input
 				id="nu-name"

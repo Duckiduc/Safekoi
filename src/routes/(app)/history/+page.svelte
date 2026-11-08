@@ -98,7 +98,7 @@
 
 	{#each groups as [month, list] (month)}
 		<h2 class="mt-8 mb-3 text-sm font-semibold text-muted">{month}</h2>
-		<ul class="grid gap-2">
+		<ul class="grid grid-cols-1 gap-2">
 			{#each list ?? [] as w (w.id)}
 				<li>
 					<a href="/history/{w.id}" class="flex items-center gap-3 card py-3">

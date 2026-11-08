@@ -64,7 +64,7 @@
 			{plural(day.items.length, m.exercise_one(), m.exercise_other())}
 		</div>
 	{:else}
-		<ul class="mt-3 grid gap-1 text-sm">
+		<ul class="mt-3 grid grid-cols-1 gap-1 text-sm">
 			{#each day.items as it (it.id)}
 				<li class="flex justify-between">
 					<span>{exerciseName(it)}</span><span class="text-muted num"

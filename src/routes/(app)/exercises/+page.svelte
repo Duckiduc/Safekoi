@@ -93,7 +93,7 @@
 				await update();
 				if (result.type === 'success') createOpen = false;
 			}}
-		class="grid gap-4"
+		class="grid grid-cols-1 gap-4"
 	>
 		<div>
 			<label class="label" for="n">{m.name()}</label><input

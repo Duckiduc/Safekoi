@@ -493,7 +493,7 @@
 					</div>{/each}
 			</div>
 		{/if}
-		<div class="grid gap-2">
+		<div class="grid grid-cols-1 gap-2">
 			<label class="label" for="rpe">{m.rpe_label()}</label>
 			<input
 				id="rpe"

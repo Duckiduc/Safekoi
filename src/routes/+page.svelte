@@ -43,7 +43,7 @@
 			{m.landing_tagline()}
 		</p>
 	</section>
-	<ul class="mt-10 grid gap-3">
+	<ul class="mt-10 grid grid-cols-1 gap-3">
 		{#each features as f (f.title)}
 			<li class="flex gap-3 card">
 				<div
@@ -58,7 +58,7 @@
 			</li>
 		{/each}
 	</ul>
-	<div class="mt-auto grid gap-3 pt-10">
+	<div class="mt-auto grid grid-cols-1 gap-3 pt-10">
 		{#if data.signupsOpen}<a href="/register" class="btn-primary">{m.create_account()}</a>{/if}
 		<a href="/login" class={data.signupsOpen ? 'btn-ghost' : 'btn-primary'}>{m.sign_in()}</a>
 	</div>

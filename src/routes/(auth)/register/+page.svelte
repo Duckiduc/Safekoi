@@ -32,7 +32,7 @@
 	</p>
 {:else}
 	<p class="mt-1 text-muted">{m.register_subtitle()}</p>
-	<form onsubmit={submit} class="mt-8 grid gap-4">
+	<form onsubmit={submit} class="mt-8 grid grid-cols-1 gap-4">
 		<div>
 			<label class="label" for="name">{m.name()}</label><input
 				id="name"

@@ -37,7 +37,7 @@
 						>{/if}
 				</div>
 				<p class="mt-3 text-sm text-muted">{p.description}</p>
-				<ol class="mt-3 grid gap-1.5 text-sm">
+				<ol class="mt-3 grid grid-cols-1 gap-1.5 text-sm">
 					{#each p.days as d, i (d.id)}
 						<li class="flex items-start gap-2">
 							<span

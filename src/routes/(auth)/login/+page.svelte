@@ -60,7 +60,7 @@
 	<div class="h-px flex-1 bg-line"></div>
 </div>
 
-<form onsubmit={submit} class="grid gap-4">
+<form onsubmit={submit} class="grid grid-cols-1 gap-4">
 	<div>
 		<label class="label" for="email">{m.email()}</label>
 		<input

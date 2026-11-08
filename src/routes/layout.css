@@ -24,6 +24,8 @@
 	body {
 		@apply min-h-dvh font-sans antialiased;
 		overscroll-behavior-y: none;
+		/* Never scroll sideways on a phone, even if something is too wide. */
+		overflow-x: clip;
 	}
 	input,
 	select,
