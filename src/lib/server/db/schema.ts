@@ -6,7 +6,8 @@ import {
 	boolean,
 	timestamp,
 	index,
-	uniqueIndex
+	uniqueIndex,
+	primaryKey
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { user } from './auth.schema';
@@ -241,6 +242,50 @@ export const programRelations = relations(program, ({ many }) => ({ templates: m
 export const personalRecordRelations = relations(personalRecord, ({ one }) => ({
 	exercise: one(exercise, { fields: [personalRecord.exerciseId], references: [exercise.id] })
 }));
+
+/** Who follows whom (one-way, like most social apps). */
+export const follow = pgTable(
+	'follow',
+	{
+		followerId: text('follower_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		followingId: text('following_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at').defaultNow().notNull()
+	},
+	(t) => [
+		primaryKey({ columns: [t.followerId, t.followingId] }),
+		index('follow_following_idx').on(t.followingId)
+	]
+);
+
+/** A direct invitation to join someone's training session. */
+export const sessionInvite = pgTable(
+	'session_invite',
+	{
+		id: id(),
+		sessionId: text('session_id')
+			.notNull()
+			.references(() => trainingSession.id, { onDelete: 'cascade' }),
+		fromId: text('from_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		toId: text('to_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		/** pending → joined or declined */
+		status: text('status', { enum: ['pending', 'joined', 'declined'] })
+			.default('pending')
+			.notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull()
+	},
+	(t) => [
+		uniqueIndex('session_invite_unique').on(t.sessionId, t.toId),
+		index('session_invite_to_idx').on(t.toId, t.status)
+	]
+);
 
 /** Small key/value store for app-wide settings changed from the admin page. */
 export const appSetting = pgTable('app_setting', {

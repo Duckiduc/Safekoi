@@ -29,6 +29,13 @@
       "when": 1794178519504,
       "tag": "0003_training_together",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794660871977,
+      "tag": "0004_social",
+      "breakpoints": true
     }
   ]
 }

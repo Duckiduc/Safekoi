@@ -7,6 +7,7 @@ import { m } from '#lib/i18n.ts';
 import { db } from '#lib/server/db/index.ts';
 import {
 	exercise,
+	sessionInvite,
 	template,
 	trainingSession,
 	user,
@@ -106,14 +107,20 @@ export async function joinSession(userId: string, code: string) {
 			.where(eq(template.id, s.hostWorkout.templateId));
 		if (t && t.ownerId === null) templateId = s.hostWorkout.templateId;
 	}
-	const w = await db.transaction((tx) =>
-		insertWorkout(
+	const w = await db.transaction(async (tx) => {
+		const created = await insertWorkout(
 			tx,
 			userId,
 			{ name: s.hostWorkout.name, templateId, sessionId: s.session.id },
 			s.items
-		)
-	);
+		);
+		// A direct invite for this session (if any) is now answered.
+		await tx
+			.update(sessionInvite)
+			.set({ status: 'joined' })
+			.where(and(eq(sessionInvite.sessionId, s.session.id), eq(sessionInvite.toId, userId)));
+		return created;
+	});
 	return w.id;
 }
 

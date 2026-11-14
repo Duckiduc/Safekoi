@@ -19,6 +19,7 @@
 	import ExercisePicker from '#lib/components/ExercisePicker.svelte';
 	import FocusView from '#lib/components/FocusView.svelte';
 	import Partners from '#lib/components/Partners.svelte';
+	import QrCode from '#lib/components/QrCode.svelte';
 	import type { SessionProgress } from '#lib/server/together.ts';
 	import Sheet from '#lib/components/Sheet.svelte';
 	import { timer } from '#lib/timer.svelte.ts';
@@ -124,14 +125,37 @@
 		return () => clearInterval(t);
 	});
 
+	type Invitee = {
+		id: string;
+		name: string;
+		invite: 'pending' | 'joined' | 'declined' | null;
+	};
+	let invitees = $state<Invitee[] | null>(null);
+	let inviting = $state<string | null>(null);
+	const loadInvitees = async () =>
+		(invitees = await api<Invitee[]>('GET', `/api/workouts/${data.workout.id}/invites`).catch(
+			() => invitees ?? []
+		));
+
 	async function openInvite() {
 		inviteOpen = true;
+		loadInvitees();
 		if (!shared) {
 			const ok = await api('POST', `/api/workouts/${data.workout.id}/together`).catch(() => null);
 			if (!ok) return toast(m.err_together_start(), 'error');
 			shared = true;
 		}
 		await loadTogether();
+	}
+	async function invitePerson(p: Invitee) {
+		inviting = p.id;
+		const ok = await api('POST', `/api/workouts/${data.workout.id}/invites`, {
+			userId: p.id
+		}).catch(() => null);
+		inviting = null;
+		if (!ok) return toast(m.err_together_start(), 'error');
+		p.invite = 'pending';
+		toast(m.invite_sent({ name: p.name }));
 	}
 	async function shareInvite() {
 		const text = m.together_share_text({ name });
@@ -622,7 +646,45 @@
 
 <Sheet bind:open={inviteOpen} title={m.together_title()}>
 	<p class="text-sm text-muted">{m.together_invite_intro()}</p>
+
+	<p class="mt-5 label">{m.invite_following()}</p>
+	{#if invitees === null}
+		<p class="text-sm text-muted">…</p>
+	{:else if invitees.length}
+		<ul class="grid grid-cols-1 gap-1.5">
+			{#each invitees as p (p.id)}
+				<li class="flex items-center gap-3">
+					<span
+						class="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-sm font-bold"
+						>{p.name.slice(0, 1).toUpperCase()}</span
+					>
+					<span class="min-w-0 flex-1 truncate text-sm font-medium">{p.name}</span>
+					{#if p.invite === 'joined'}
+						<span class="chip bg-accent/15 text-accent">{m.invite_joined()}</span>
+					{:else if p.invite === 'pending'}
+						<span class="chip">{m.invite_pending()}</span>
+					{:else}
+						<button
+							class="btn-primary btn-sm"
+							onclick={() => invitePerson(p)}
+							disabled={inviting === p.id}>{m.invite_button()}</button
+						>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<p class="text-sm text-muted">
+			{m.invite_no_following()} <a href="/people" class="text-accent">{m.people_find()}</a>
+		</p>
+	{/if}
+
 	{#if together}
+		<p class="mt-6 label">{m.invite_nearby()}</p>
+		<div class="mx-auto w-full max-w-60">
+			<QrCode value={inviteUrl} label={m.invite_qr_label()} />
+		</div>
+		<p class="mt-2 text-center text-xs text-muted">{m.invite_qr_hint()}</p>
 		<div class="mt-4 truncate rounded-xl bg-surface-2 px-3 py-2.5 text-sm num select-all">
 			{inviteUrl}
 		</div>

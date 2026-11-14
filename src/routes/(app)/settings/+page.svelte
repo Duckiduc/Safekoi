@@ -12,7 +12,8 @@
 		CalendarDays,
 		ChevronRight,
 		Monitor,
-		KeyRound
+		KeyRound,
+		Users
 	} from '@lucide/svelte';
 	import { authClient } from '#lib/auth-client.ts';
 	import { toast } from '#lib/toast.svelte.ts';
@@ -144,7 +145,7 @@
 	</div>
 
 	<nav class="mt-6 grid grid-cols-1 gap-2">
-		{#each [{ href: '/programs', icon: CalendarDays, label: m.programs() }, { href: '/templates', icon: BookOpen, label: m.templates() }, { href: '/exercises', icon: Dumbbell, label: m.exercise_library() }, ...(u.role === 'admin' ? [{ href: '/admin/users', icon: Shield, label: m.admin_users() }] : [])] as l (l.href)}
+		{#each [{ href: '/people', icon: Users, label: m.people() }, { href: '/programs', icon: CalendarDays, label: m.programs() }, { href: '/templates', icon: BookOpen, label: m.templates() }, { href: '/exercises', icon: Dumbbell, label: m.exercise_library() }, ...(u.role === 'admin' ? [{ href: '/admin/users', icon: Shield, label: m.admin_users() }] : [])] as l (l.href)}
 			<a href={l.href} class="flex items-center gap-3 card py-3"
 				><l.icon size={18} class="text-accent" /><span class="flex-1 font-medium">{l.label}</span
 				><ChevronRight size={18} class="text-muted" /></a

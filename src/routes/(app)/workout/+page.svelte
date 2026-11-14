@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Play, Plus, ChevronRight, CalendarDays } from '@lucide/svelte';
+	import { Play, Plus, ChevronRight, CalendarDays, ScanLine } from '@lucide/svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import QrScanner from '#lib/components/QrScanner.svelte';
 	import StartButton from '#lib/components/StartButton.svelte';
 	import ProgramNext from '#lib/components/ProgramNext.svelte';
 	import { m, exerciseName, templateName, programText } from '#lib/i18n.ts';
@@ -7,6 +9,7 @@
 
 	let { data }: PageProps = $props();
 	let openProgram = $state<string | null>(null);
+	let scanOpen = $state(false);
 	const names = (list: { id: string; name: string }[]) => list.map(exerciseName).join(' · ');
 </script>
 
@@ -19,8 +22,11 @@
 		<div class="mt-6"><ProgramNext plan={data.next} compact /></div>
 	{/if}
 
-	<div class="mt-4">
+	<div class="mt-4 grid grid-cols-1 gap-2">
 		<StartButton class="btn-ghost w-full"><Plus size={18} /> {m.start_empty()}</StartButton>
+		<button class="btn-ghost w-full" onclick={() => (scanOpen = true)}
+			><ScanLine size={18} /> {m.scan_join()}</button
+		>
 	</div>
 
 	<section class="mt-8">
@@ -93,3 +99,7 @@
 		</ul>
 	</section>
 </main>
+
+<Sheet bind:open={scanOpen} title={m.scan_title()}>
+	{#if scanOpen}<QrScanner onclose={() => (scanOpen = false)} />{/if}
+</Sheet>
